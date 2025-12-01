@@ -1,26 +1,19 @@
-# docker-compose.yml
-
-version: '3.8' # Versão do formato Docker Compose
+version: '3.8'
 
 services:
-  # --- 1. Serviço de Aplicação 1 ---
   app1:
-    build: . # Usa o Dockerfile na pasta atual para construir a imagem
+    build: .
     environment:
-      # Variável de ambiente única para identificação do container
       - CONTAINER_NAME=App_Um
-    # HEALTHCHECK: Garante que o container só seja considerado 'pronto' se o curl retornar 0 (sucesso)
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"] # Comando de teste: tenta acessar a rota principal
-      interval: 5s              # Frequência de teste: a cada 5 segundos
-      timeout: 3s               # Tempo limite para a resposta: 3 segundos
-      retries: 3                # Número de falhas antes de ser marcado como 'unhealthy' (doente)
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
-  # --- 2. Serviço de Aplicação 2 ---
   app2:
-    build: . # Usa a mesma imagem que app1 (economia de espaço!)
+    build: .
     environment:
-      # Outra variável de ambiente única
       - CONTAINER_NAME=App_Dois
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000"]
@@ -28,18 +21,14 @@ services:
       timeout: 3s
       retries: 3
   
-  # --- 3. Serviço do Load Balancer (Gerente) ---
   nginx:
-    image: nginx:latest # Imagem oficial do NGINX
+    image: nginx:latest
     volumes:
-      # Injeta nosso arquivo de configuração local no local correto dentro do container NGINX
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      # Mapeia a porta 8080 do seu Windows para a porta 80 do container NGINX
       - "8080:80"
-    # Garante que as aplicações estejam de pé antes do NGINX iniciar
     depends_on: 
       app1:
-        condition: service_healthy # Só sobe se app1 estiver com status 'healthy'
+        condition: service_healthy
       app2:
-        condition: service_healthy # Só sobe se app2 estiver com status 'healthy'
+        condition: service_healthy
